@@ -222,9 +222,9 @@ func TestCoordinatesToRangeRef(t *testing.T) {
 	_, err := f.coordinatesToRangeRef([]int{})
 	assert.EqualError(t, err, ErrCoordinates.Error())
 	_, err = f.coordinatesToRangeRef([]int{1, -1, 1, 1})
-	assert.EqualError(t, err, "invalid cell reference [1, -1]")
+	assert.Equal(t, newCoordinatesToCellNameError(1, -1), err)
 	_, err = f.coordinatesToRangeRef([]int{1, 1, 1, -1})
-	assert.EqualError(t, err, "invalid cell reference [1, -1]")
+	assert.Equal(t, newCoordinatesToCellNameError(1, -1), err)
 	ref, err := f.coordinatesToRangeRef([]int{1, 1, 1, 1})
 	assert.NoError(t, err)
 	assert.EqualValues(t, ref, "A1:A1")
@@ -294,9 +294,11 @@ func TestGetRootElement(t *testing.T) {
 
 func TestSetIgnorableNameSpace(t *testing.T) {
 	f := NewFile()
-	f.xmlAttr["xml_path"] = []xml.Attr{{}}
+	f.xmlAttr.Store("xml_path", []xml.Attr{{}})
 	f.setIgnorableNameSpace("xml_path", 0, xml.Attr{Name: xml.Name{Local: "c14"}})
-	assert.EqualValues(t, "c14", f.xmlAttr["xml_path"][0].Value)
+	attrs, ok := f.xmlAttr.Load("xml_path")
+	assert.EqualValues(t, "c14", attrs.([]xml.Attr)[0].Value)
+	assert.True(t, ok)
 }
 
 func TestStack(t *testing.T) {
